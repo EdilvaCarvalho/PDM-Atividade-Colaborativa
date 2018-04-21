@@ -12,6 +12,7 @@ import br.edu.ifpb.atividadecolaborativa.FormularioAbastecimentoActivity;
 import br.edu.ifpb.atividadecolaborativa.R;
 import br.edu.ifpb.atividadecolaborativa.dao.PostoDeCombustivelDAO;
 import br.edu.ifpb.atividadecolaborativa.modelo.Abastecimento;
+import br.edu.ifpb.atividadecolaborativa.modelo.AbastecimentoLite;
 import br.edu.ifpb.atividadecolaborativa.modelo.PostoDeCombustivel;
 import br.edu.ifpb.atividadecolaborativa.modelo.TipoDeCombustivel;
 import br.edu.ifpb.atividadecolaborativa.modelo.Usuario;
@@ -28,7 +29,7 @@ public class FormularioHelperAbastecimento {
     private final Spinner campoPostoDeCombustivel;
     private final Spinner campoTipoDeCombustivel;
     private Usuario usuario;
-    private Abastecimento abastecimento;
+    private AbastecimentoLite abastecimento;
 
 
     public FormularioHelperAbastecimento(FormularioAbastecimentoActivity activity, Usuario usuario) {
@@ -38,18 +39,18 @@ public class FormularioHelperAbastecimento {
         this.campoPostoDeCombustivel = (Spinner) activity.findViewById(R.id.postos_spinner);
         this.campoTipoDeCombustivel = (Spinner) activity.findViewById(R.id.tipo_combust_spinner);
         this.usuario = usuario;
-        this.abastecimento = new Abastecimento();
+        this.abastecimento = new AbastecimentoLite();
     }
 
-    public Abastecimento pegaAbastecimento(Context context) {
-        abastecimento.setUsuario(usuario);
+    public AbastecimentoLite pegaAbastecimento(Context context) {
+        abastecimento.setUsuario(usuario.getId());
         abastecimento.setQuilometragem(Double.valueOf(campoQuilometragem.getText().toString()));
         abastecimento.setValorLitro(Double.valueOf(campoValorLitro.getText().toString()));
         abastecimento.setQtdeLitros(Double.valueOf(campoQtdeLitros.getText().toString()));
         TipoDeCombustivel tipo = (TipoDeCombustivel) campoTipoDeCombustivel.getSelectedItem();
         abastecimento.setTipoDeCombustivel(tipo);
         PostoDeCombustivel postoDeCombustivel = (PostoDeCombustivel) campoPostoDeCombustivel.getSelectedItem();
-        abastecimento.setPostoDeCombustivel(postoDeCombustivel);
+        abastecimento.setPostoDeCombustivelID(postoDeCombustivel.getId());
         return abastecimento;
     }
 }

@@ -1,13 +1,17 @@
 package br.edu.ifpb.atividadecolaborativa;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -17,6 +21,12 @@ import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
+
+import java.lang.reflect.Type;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
@@ -26,14 +36,19 @@ import br.edu.ifpb.atividadecolaborativa.dao.PostoDeCombustivelDAO;
 import br.edu.ifpb.atividadecolaborativa.dao.UsuarioDAO;
 import br.edu.ifpb.atividadecolaborativa.formularioHelper.FormularioHelperAbastecimento;
 import br.edu.ifpb.atividadecolaborativa.modelo.Abastecimento;
+import br.edu.ifpb.atividadecolaborativa.modelo.AbastecimentoLite;
 import br.edu.ifpb.atividadecolaborativa.modelo.PostoDeCombustivel;
 import br.edu.ifpb.atividadecolaborativa.modelo.TipoDeCombustivel;
 import br.edu.ifpb.atividadecolaborativa.modelo.Usuario;
+import br.edu.ifpb.atividadecolaborativa.rest.DateDeserializer;
+import br.edu.ifpb.atividadecolaborativa.rest.NetworkUtils;
 
 public class FormularioAbastecimentoActivity extends AppCompatActivity {
 
     private FormularioHelperAbastecimento helperAbastecimento;
     public static final String PREFS_NAME = "MyPrefsFile";
+    private ProgressDialog load;
+    private AbastecimentoLite abastecimento;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,12 +81,15 @@ public class FormularioAbastecimentoActivity extends AppCompatActivity {
 
             @Override
             public void onClick(View view) {
-                AbastecimentoDAO daoAbastecimento = new AbastecimentoDAO(FormularioAbastecimentoActivity.this);
-                Abastecimento abastecimento = helperAbastecimento.pegaAbastecimento(FormularioAbastecimentoActivity.this);
+                //AbastecimentoDAO daoAbastecimento = new AbastecimentoDAO(FormularioAbastecimentoActivity.this);
+                abastecimento = helperAbastecimento.pegaAbastecimento(FormularioAbastecimentoActivity.this);
                 Date data = new Date();
                 abastecimento.setHorario(data);
-                daoAbastecimento.salvarAbastecimento(abastecimento);
-                daoAbastecimento.close();
+
+                GetJson gj = new GetJson();
+                gj.execute();
+                //daoAbastecimento.salvarAbastecimento(abastecimento);
+                //daoAbastecimento.close();
                 Toast.makeText(FormularioAbastecimentoActivity.this, "Abastecimento salvo!", Toast.LENGTH_SHORT).show();
                 finish();
             }
@@ -108,5 +126,37 @@ public class FormularioAbastecimentoActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private class GetJson extends AsyncTask<Void, Void, String> {
+
+        @Override
+        protected void onPreExecute(){
+            super.onPreExecute();
+        }
+
+        @SuppressLint("NewApi")
+        @Override
+        protected String doInBackground(Void... voids) {
+
+            Type abastecimentoType = new TypeToken<AbastecimentoLite>() {}.getType();
+
+            Gson g = new Gson();
+
+            String abs = g.toJson(abastecimento, abastecimentoType);
+
+            try {
+                return NetworkUtils.sendPost("http://192.168.2.11:8080/webService/webapi/Abastecimentos/", abs);
+            } catch (NetworkUtils.MinhaException e) {
+                e.printStackTrace();
+            }
+
+            return "falhou";
+        }
+
+        @Override
+        protected void onPostExecute(String abastecimentos){
+            Log.i("Resultado", abastecimentos);
+        }
     }
 }

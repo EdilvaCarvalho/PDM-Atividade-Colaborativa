@@ -2,10 +2,9 @@ package br.edu.ifpb.atividadecolaborativa.modelo;
 
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.Date;
+
+
 
 /**
  * Created by Edilva on 27/03/2018.
@@ -21,7 +20,9 @@ public class Abastecimento implements Serializable {
     private double valorLitro;
     private double valorPago;
     private double quilometragem;
+
     private Date horario;
+
 
     public Abastecimento() {
     }

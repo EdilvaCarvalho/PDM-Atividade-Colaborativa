@@ -1,10 +1,13 @@
 package br.edu.ifpb.atividadecolaborativa;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -17,21 +20,32 @@ import android.widget.ListView;
 import android.widget.SearchView;
 import android.widget.Spinner;
 
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
+
+import java.lang.reflect.Type;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import br.edu.ifpb.atividadecolaborativa.dao.AbastecimentoDAO;
 import br.edu.ifpb.atividadecolaborativa.dao.PostoDeCombustivelDAO;
 import br.edu.ifpb.atividadecolaborativa.dao.UsuarioDAO;
 import br.edu.ifpb.atividadecolaborativa.modelo.Abastecimento;
+import br.edu.ifpb.atividadecolaborativa.modelo.AbastecimentoLite;
 import br.edu.ifpb.atividadecolaborativa.modelo.PostoDeCombustivel;
 import br.edu.ifpb.atividadecolaborativa.modelo.Usuario;
+import br.edu.ifpb.atividadecolaborativa.rest.DateDeserializer;
+import br.edu.ifpb.atividadecolaborativa.rest.NetworkUtils;
 
 public class ListaAbastecimentoPorPostoActivity extends AppCompatActivity {
 
     public static final String PREFS_NAME = "MyPrefsFile";
     private ListView listaAbastecimentos;
     PostoDeCombustivel posto;
+    private ProgressDialog load;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,7 +95,7 @@ public class ListaAbastecimentoPorPostoActivity extends AppCompatActivity {
         SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
         Long id = settings.getLong("user", 0);
 
-        UsuarioDAO daoUsuario = new UsuarioDAO(ListaAbastecimentoPorPostoActivity.this);
+        /*UsuarioDAO daoUsuario = new UsuarioDAO(ListaAbastecimentoPorPostoActivity.this);
         Usuario usuario = daoUsuario.buscarUsuario(id);
         daoUsuario.close();
 
@@ -95,7 +109,9 @@ public class ListaAbastecimentoPorPostoActivity extends AppCompatActivity {
         dao.close();
 
         listaAbastecimentos.setAdapter(new ArrayAdapter<Abastecimento>(this,
-                android.R.layout.simple_list_item_1, abastecimentos));
+                android.R.layout.simple_list_item_1, abastecimentos));*/
+        GetJson gj = new GetJson();
+        gj.execute();
     }
 
     @Override
@@ -137,4 +153,77 @@ public class ListaAbastecimentoPorPostoActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    private class GetJson extends AsyncTask<Void, Void, String> {
+
+        @Override
+        protected void onPreExecute() {
+            load = ProgressDialog.show(ListaAbastecimentoPorPostoActivity.this, "Por favor Aguarde ...", "Recuperando Informações do Servidor...");
+
+        }
+
+        @Override
+        protected String doInBackground(Void... voids) {
+            SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+            Long id = settings.getLong("user", 0);
+            Log.i("Id", String.valueOf(id));
+            return NetworkUtils.GetJASONFromApi("http://192.168.2.11:8080/webService/webapi/Abastecimentos/postoAndUser/" + posto.getId() + "/" + id);
+
+
+        }
+
+        @Override
+        protected void onPostExecute(String abastecimentos) {
+
+            //Tipando uma coleção para Json Converter
+            Type collectionType = new TypeToken<List<AbastecimentoLite>>() {
+            }.getType();
+            //Convertendo o Json em uma lista de Abastecimento Lite
+            List<AbastecimentoLite> abs = new GsonBuilder().registerTypeAdapter(Date.class, new DateDeserializer()).create().fromJson(abastecimentos, collectionType);
+
+            //Tratamento para lista nula ou vazia
+            if (abs != null && abs.size() > 0) {
+                //Daos nescesário para a busca
+                PostoDeCombustivelDAO dao = new PostoDeCombustivelDAO(ListaAbastecimentoPorPostoActivity.this);
+                UsuarioDAO daoUser = new UsuarioDAO(ListaAbastecimentoPorPostoActivity.this);
+
+                //Lista de resultado
+                List<Abastecimento> lista = new ArrayList<>();
+                //Formatando a data
+                SimpleDateFormat fmt = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+
+                for (AbastecimentoLite item : abs) {
+
+                    //Busca usuário
+                    Usuario user = daoUser.buscarUsuario(item.getUsuarioID());
+                    Log.i("Usuario:", String.valueOf(item.getUsuarioID()));
+
+                    //Busca Posto
+                    PostoDeCombustivel posto = dao.buscarPosto(item.getPostoDeCombustivelID());
+                    Log.i("Posto:", String.valueOf(item.getPostoDeCombustivelID()));
+
+                    //Cria o Abastecimento com os dados do item repassado.
+                    Abastecimento ab = new Abastecimento();
+                    ab.setHorario(item.getHorario());
+                    ab.setId(item.getId());
+                    ab.setPostoDeCombustivel(posto);
+                    ab.setQtdeLitros(item.getQtdeLitros());
+                    ab.setQuilometragem(item.getQuilometragem());
+                    ab.setTipoDeCombustivel(item.getTipoDeCombustivel());
+                    ab.setUsuario(user);
+                    ab.setValorLitro(item.getValorLitro());
+                    ab.setValorPago(item.getValorPago());
+
+                    //Add lista
+                    lista.add(ab);
+
+                }
+                //Preenche os dados na tela.
+                listaAbastecimentos.setAdapter(new ArrayAdapter<Abastecimento>(ListaAbastecimentoPorPostoActivity.this,
+                        android.R.layout.simple_list_item_1, lista));
+            }
+
+            Log.i("Resultado", abastecimentos);
+            load.dismiss();
+        }
+    }
 }

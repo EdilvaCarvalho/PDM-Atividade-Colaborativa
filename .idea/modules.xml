@@ -2,7 +2,10 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+<<<<<<< HEAD
       <module fileurl="file://C:\Users\mathe\AndroidStudioProjects\PDM-Atividade-Colaborativa\AtividadeColaborativa.iml" filepath="C:\Users\mathe\AndroidStudioProjects\PDM-Atividade-Colaborativa\AtividadeColaborativa.iml" />
+=======
+>>>>>>> Laerton
       <module fileurl="file://$PROJECT_DIR$/PDM-Atividade-Colaborativa.iml" filepath="$PROJECT_DIR$/PDM-Atividade-Colaborativa.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>

@@ -1,19 +1,29 @@
 package br.edu.ifpb.atividadecolaborativa;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+
 import br.edu.ifpb.atividadecolaborativa.dao.UsuarioDAO;
 import br.edu.ifpb.atividadecolaborativa.formularioHelper.FormularioHelperLogin;
 import br.edu.ifpb.atividadecolaborativa.modelo.Usuario;
+import br.edu.ifpb.atividadecolaborativa.rest.NetworkUtils;
 
 public class MainActivity extends AppCompatActivity {
 
+    private ProgressDialog load;
     private FormularioHelperLogin helperLogin;
     public static final String PREFS_NAME = "MyPrefsFile";
 
@@ -53,5 +63,36 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+      //  GetJson gj = new GetJson();
+       // gj.execute();
+        //String resultado = NetworkUtils.GetJASONFromApi("http://10.3.132.140:8080/webService/webapi/Abastecimentos/ultimo/1/ETANOL_COMUM");
+
+
+    }/*
+    private class GetJson extends AsyncTask<Void, Void, String>{
+
+        @Override
+        protected void onPreExecute(){
+            load = ProgressDialog.show(MainActivity.this, "Por favor Aguarde ...", "Recuperando Informações do Servidor...");
+
+        }
+
+        @Override
+        protected String doInBackground(Void... voids) {
+            return NetworkUtils.GetJASONFromApi("http://desktop-ll3viks:8080/webService/webapi/Abastecimentos/ultimo/1/ETANOL_COMUM");
+        }
+        @Override
+        protected void onPostExecute(String texto){
+            Log.i("Resultado", texto);
+            load.dismiss();
+        }
+    }*/
+
+    @Override
+    protected void onResume() {
+        if(getIntent().getBooleanExtra("SAIR", false)){
+            finish();
+        }
+        super.onResume();
     }
 }

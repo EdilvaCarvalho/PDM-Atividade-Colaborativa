@@ -17,13 +17,18 @@ public class Sair {
     }
 
     public void sair() {
-        SharedPreferences save = context.getSharedPreferences("user", Context.MODE_PRIVATE);
+        /*SharedPreferences save = context.getSharedPreferences("user", Context.MODE_PRIVATE);
         SharedPreferences.Editor saveEdit = save.edit();
         saveEdit.clear();
         saveEdit.commit();
         Intent intent = new Intent(Intent.ACTION_MAIN);
         intent.addCategory(Intent.CATEGORY_HOME);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        context.startActivity(intent);
+        context.startActivity(intent);*/
+
+        Intent  it = new Intent(context.getApplicationContext(), MainActivity.class);
+        it.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        it.putExtra("SAIR", true);
+        context.startActivity(it);
     }
 }
